@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { Navbar } from "../components/Navbar";
@@ -15,7 +16,6 @@ import {
   Smile,
   Clock,
   ChevronDown,
-  ArrowRight,
   Scan,
   HelpCircle,
   UserCircle,
@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 
 export const LandingPage: React.FC = () => {
-  const { setView, user } = useApp();
+  const { setView } = useApp();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const features = [
@@ -230,13 +230,21 @@ export const LandingPage: React.FC = () => {
             language analysis to encourage safer digital communication.
           </p>
 
+          {/* Authentication Buttons */}
           <div className="flex flex-wrap gap-4 mt-2">
+
             <button
-              onClick={() => setView(user ? "dashboard" : "login")}
+              onClick={() => setView("login")}
               className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary to-secondary font-semibold text-white hover:opacity-95 shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all cursor-pointer"
             >
-              Try Detection Now
-              <ArrowRight className="w-4 h-4" />
+              Login
+            </button>
+
+            <button
+              onClick={() => setView("register")}
+              className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-primary/40 bg-surface-glass font-semibold text-text-main hover:border-primary hover:bg-primary/10 transition-all cursor-pointer"
+            >
+              Get Started
             </button>
 
             <button
@@ -245,6 +253,7 @@ export const LandingPage: React.FC = () => {
             >
               Explore Features
             </button>
+
           </div>
         </div>
 
@@ -649,7 +658,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Phone - Non-clickable */}
+              {/* Phone */}
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 shrink-0 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                   <Phone className="w-5 h-5 text-primary" />

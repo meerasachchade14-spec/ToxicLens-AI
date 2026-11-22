@@ -1,3 +1,4 @@
+
 import React from "react";
 import { AppProvider, useApp } from "./context/AppContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -41,7 +42,7 @@ function AppContent() {
 
   React.useEffect(() => {
     if (isDashboardView && !user) {
-      setView("login");
+      setView("landing");
     }
   }, [currentView, user, isDashboardView, setView]);
 
@@ -53,9 +54,14 @@ function AppContent() {
     return <AuthPages />;
   }
 
+  if (isDashboardView && !user) {
+    return <LandingPage />;
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-bg-base text-text-main">
       <Sidebar />
+
       <div className="flex-1 flex flex-col min-w-0 bg-slate-950/25 light:bg-slate-50/25 overflow-hidden">
         {currentView === "dashboard" && <DashboardHome />}
         {currentView === "detection" && <TextDetection />}
@@ -64,29 +70,27 @@ function AppContent() {
         {currentView === "reports" && <ReportsPage />}
         {currentView === "profile" && <ProfilePage />}
         {currentView === "settings" && <SettingsPage />}
-        {currentView === "admin" && user?.role === "Admin" && <AdminDashboard />}
+        {currentView === "admin" && user?.role === "Admin" && (
+          <AdminDashboard />
+        )}
       </div>
     </div>
   );
 }
 
-
 function App() {
+  const [loading, setLoading] = React.useState(true);
 
-  const [loading,setLoading]=React.useState(true);
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
 
-  React.useEffect(()=>{
+    return () => clearTimeout(timer);
+  }, []);
 
-      const timer=setTimeout(()=>{
-          setLoading(false);
-      },5000);
-
-      return ()=>clearTimeout(timer);
-
-  },[]);
-
-  if(loading){
-      return <SplashScreen/>
+  if (loading) {
+    return <SplashScreen />;
   }
 
   return (

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Shield,
@@ -66,7 +67,6 @@ export default function SplashScreen() {
       <div className="blob blob2"></div>
       <div className="blob blob3"></div>
 
-    
       <div className="shield-wrapper">
         <div className="ring ring1"></div>
         <div className="ring ring2"></div>
@@ -116,7 +116,7 @@ export default function SplashScreen() {
       </div>
 
       <div className="boot-text">
-        Launching Workspace...
+        Launching ToxicLens AI...
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useApp } from "../context/AppContext";
@@ -16,7 +17,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
   const { theme, toggleTheme } = useTheme();
-  const { user, setView } = useApp();
+  const { setView } = useApp();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -48,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
     setView("landing");
   };
 
-  const handleAuthClick = (view: "login" | "register" | "dashboard") => {
+  const handleAuthClick = (view: "login" | "register") => {
     setIsMobileMenuOpen(false);
     setView(view);
   };
@@ -112,32 +113,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
             )}
           </button>
 
-          {user ? (
-            <button
-              onClick={() => handleAuthClick("dashboard")}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-sm font-semibold text-white hover:opacity-90 shadow-md shadow-primary/15 hover:scale-[1.02] transition-all cursor-pointer"
-            >
-              Go to Console
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => handleAuthClick("login")}
-                className="px-5 py-2.5 text-sm font-semibold text-text-main hover:text-primary transition-colors cursor-pointer"
-              >
-                Login
-              </button>
+          <button
+            onClick={() => handleAuthClick("login")}
+            className="px-5 py-2.5 text-sm font-semibold text-text-main hover:text-primary transition-colors cursor-pointer"
+          >
+            Login
+          </button>
 
-              <button
-                onClick={() => handleAuthClick("register")}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-sm font-semibold text-white hover:opacity-90 shadow-md shadow-primary/15 hover:shadow-primary/25 hover:scale-[1.02] transition-all cursor-pointer"
-              >
-                Get Started
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleAuthClick("register")}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-sm font-semibold text-white hover:opacity-90 shadow-md shadow-primary/15 hover:shadow-primary/25 hover:scale-[1.02] transition-all cursor-pointer"
+          >
+            Get Started
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Mobile Controls */}
@@ -184,32 +173,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
             ))}
 
             <div className="flex flex-col gap-3 mt-5">
-              {user ? (
-                <button
-                  onClick={() => handleAuthClick("dashboard")}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-base font-semibold text-white shadow-lg"
-                >
-                  Go to Console
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleAuthClick("login")}
-                    className="w-full py-3 rounded-xl border border-glass text-base font-semibold text-text-main hover:bg-surface-glass transition-colors"
-                  >
-                    Login
-                  </button>
+              <button
+                onClick={() => handleAuthClick("login")}
+                className="w-full py-3 rounded-xl border border-glass text-base font-semibold text-text-main hover:bg-surface-glass transition-colors"
+              >
+                Login
+              </button>
 
-                  <button
-                    onClick={() => handleAuthClick("register")}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-base font-semibold text-white shadow-lg"
-                  >
-                    Get Started
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </>
-              )}
+              <button
+                onClick={() => handleAuthClick("register")}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-base font-semibold text-white shadow-lg"
+              >
+                Get Started
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type ViewType =
@@ -233,24 +234,15 @@ const initialAdminLogs: AdminLog[] = [
 ];
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+  // No user is logged in when the application starts.
   const [user, setUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : {
-      name: "Meera Nair",
-      email: "meera.nair@toxiclens.ai",
-      phone: "+91 98765 43210",
-      role: "Admin",
-      scanCount: 1420,
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=256",
-      joinedDate: "2026-03-10",
-      achievements: ["Safety Guardian", "Real-Time Watchdog", "Text Scholar", "Accuracy Champion"],
-    };
+    return saved ? JSON.parse(saved) : null;
   });
 
-  const [currentView, setView] = useState<ViewType>(() => {
-    const saved = localStorage.getItem("currentView") as ViewType;
-    return saved || "landing";
-  });
+  // Always start from the Landing Page.
+  const [currentView, setView] = useState<ViewType>("landing");
 
   const [history, setHistory] = useState<ScanRecord[]>(() => {
     const saved = localStorage.getItem("history");
@@ -278,7 +270,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [history]);
 
   const totalScans = history.length;
-  const accuracy = totalScans > 0 ? Math.round(((totalScans - 1) / totalScans) * 100) : 98; // High accuracy mockup
+  const accuracy = totalScans > 0 ? Math.round(((totalScans - 1) / totalScans) * 100) : 98;
 
   const scanStats = {
     totalScans: (user?.scanCount || 0) + totalScans - initialHistory.length,
@@ -397,13 +389,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let explanation = "The text has been analyzed and classified as safe. No cyberbullying indicators found.";
     let safeRewrite = "";
 
-    // Specific Rule Lists
     const threats = ["kill", "die", "murder", "marn", "address", "stalk", "find you", "badla", "goli"];
     const hateSpeech = ["hate", "gay", "black", "foreigner", "religion", "bihaari", "kaleshi", "bhangi", "katua", "chamar", "mulla", "racial", "immigrant"];
     const insults = ["stupid", "idiot", "loser", "dumb", "bewakoof", "chutiya", "kamine", "gadha", "pagal", "sallu", "moti", "motu", "scum", "ugly", "bastard"];
     const sexual = ["sexy", "bitch", "slut", "randi", "saali", "rape", "nude", "porn", "rand", "harass"];
 
-    // Find flagged words
     const checkPhrases = (list: string[]) => {
       const found: string[] = [];
       list.forEach((word) => {
@@ -460,7 +450,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       explanation = `Insulting/offensive words found ('${flaggedWords.join("', '")}') that target another individual's mental ability, weight, or character in a derogatory manner.`;
       safeRewrite = "I disagree with your view, let's keep the discussion focused on the topic.";
     } else if (textLower.includes("🙄") || textLower.includes("lazy") || textLower.includes("whatever") || textLower.includes("genius")) {
-      // Sarcasm / low severity harassment
       isBullying = true;
       category = "Insult";
       severity = "Low";
@@ -490,12 +479,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setHistory((prev) => [newScan, ...prev]);
-    
-    // Increment stats in state
+
     if (user) {
       setUser((prev) => prev ? { ...prev, scanCount: prev.scanCount + 1 } : null);
     }
-    
+
     if (isBullying) {
       showToast("Bullying detected! ToxicLens flagged this comment.", "error");
       addAdminLog("Bullying Comment Flagged");
@@ -515,8 +503,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ocrImageName: imageName,
       ocrConfidence: 90 + Math.floor(Math.random() * 9),
     };
-    
-    // Replace the text-only scan we just inserted in runMockTextAnalysis
+
     setHistory((prev) => {
       const filtered = prev.filter((r) => r.id !== textScan.id);
       return [ocrScan, ...filtered];
