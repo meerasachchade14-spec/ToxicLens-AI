@@ -1,10 +1,28 @@
+
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { GlassCard } from "../components/ui/GlassCard";
-import { Shield, Mail, Lock, User, ArrowLeft, ArrowRight, ShieldAlert, KeyRound } from "lucide-react";
+import {
+  Shield,
+  Mail,
+  Lock,
+  User,
+  ArrowLeft,
+  ArrowRight,
+  ShieldAlert,
+  KeyRound,
+} from "lucide-react";
 
 export const AuthPages: React.FC = () => {
-  const { currentView, setView, loginUser, registerUser, verifyOtpCode, resetUserPassword, showToast } = useApp();
+  const {
+    currentView,
+    setView,
+    loginUser,
+    registerUser,
+    verifyOtpCode,
+    resetUserPassword,
+    showToast,
+  } = useApp();
 
   // Form states
   const [email, setEmail] = useState("");
@@ -27,10 +45,12 @@ export const AuthPages: React.FC = () => {
         showToast("Please fill in all fields", "error");
         return;
       }
+
       if (!agreeTerms) {
         showToast("You must agree to the Terms of Service", "error");
         return;
       }
+
       // Simulate registering then going to OTP verification
       showToast("Verification email sent! Check your inbox.", "info");
       setView("otp");
@@ -39,6 +59,7 @@ export const AuthPages: React.FC = () => {
         showToast("Please enter your email address", "error");
         return;
       }
+
       showToast("OTP code sent to email.", "info");
       setView("otp");
     } else if (currentView === "otp") {
@@ -46,7 +67,9 @@ export const AuthPages: React.FC = () => {
         showToast("Enter a 6-digit OTP code", "error");
         return;
       }
+
       const success = verifyOtpCode(otp);
+
       if (success) {
         // If coming from registration: verify email. If coming from forgot-password: reset.
         if (name) {
@@ -62,15 +85,9 @@ export const AuthPages: React.FC = () => {
         showToast("Password must be at least 6 characters", "error");
         return;
       }
+
       resetUserPassword(password);
     }
-  };
-
-  const handleDemoFill = () => {
-    setEmail("meera.nair@toxiclens.ai");
-    setPassword("password123");
-    setName("Meera Nair");
-    setOtp("123456");
   };
 
   return (
@@ -96,41 +113,70 @@ export const AuthPages: React.FC = () => {
             >
               <ShieldAlert className="w-6 h-6 text-white" />
             </div>
-            
+
             {currentView === "login" && (
               <>
-                <h2 className="text-2xl font-bold text-text-main">Welcome Back</h2>
-                <p className="text-xs text-text-sub">Enter credentials to log in to ToxicLens console</p>
+                <h2 className="text-2xl font-bold text-text-main">
+                  Welcome Back
+                </h2>
+                <p className="text-xs text-text-sub">
+                  Enter credentials to log in to ToxicLens console
+                </p>
               </>
             )}
+
             {currentView === "register" && (
               <>
-                <h2 className="text-2xl font-bold text-text-main">Create Account</h2>
-                <p className="text-xs text-text-sub">Deploy your threat moderation dashboard instantly</p>
+                <h2 className="text-2xl font-bold text-text-main">
+                  Create Account
+                </h2>
+                <p className="text-xs text-text-sub">
+                  Deploy your threat moderation dashboard instantly
+                </p>
               </>
             )}
+
             {currentView === "forgot-password" && (
               <>
-                <h2 className="text-2xl font-bold text-text-main">Forgot Password?</h2>
-                <p className="text-xs text-text-sub">We will send a 6-digit OTP code to verify identity</p>
+                <h2 className="text-2xl font-bold text-text-main">
+                  Forgot Password?
+                </h2>
+                <p className="text-xs text-text-sub">
+                  We will send a 6-digit OTP code to verify identity
+                </p>
               </>
             )}
+
             {currentView === "otp" && (
               <>
-                <h2 className="text-2xl font-bold text-text-main">OTP Verification</h2>
-                <p className="text-xs text-text-sub">A security code has been dispatched to your email</p>
+                <h2 className="text-2xl font-bold text-text-main">
+                  OTP Verification
+                </h2>
+                <p className="text-xs text-text-sub">
+                  A security code has been dispatched to your email
+                </p>
               </>
             )}
+
             {currentView === "email-verify" && (
               <>
-                <h2 className="text-2xl font-bold text-text-main">Email Verified</h2>
-                <p className="text-xs text-text-sub">Secure credentials established. Proceed to dashboard.</p>
+                <h2 className="text-2xl font-bold text-text-main">
+                  Email Verified
+                </h2>
+                <p className="text-xs text-text-sub">
+                  Secure credentials established. Proceed to dashboard.
+                </p>
               </>
             )}
+
             {currentView === "reset-password" && (
               <>
-                <h2 className="text-2xl font-bold text-text-main">Reset Password</h2>
-                <p className="text-xs text-text-sub">Create a new secure passphrase for account recovery</p>
+                <h2 className="text-2xl font-bold text-text-main">
+                  Reset Password
+                </h2>
+                <p className="text-xs text-text-sub">
+                  Create a new secure passphrase for account recovery
+                </p>
               </>
             )}
           </div>
@@ -138,7 +184,9 @@ export const AuthPages: React.FC = () => {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {currentView === "register" && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">Full Name</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">
+                  Full Name
+                </label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-sub/70" />
                   <input
@@ -152,9 +200,13 @@ export const AuthPages: React.FC = () => {
               </div>
             )}
 
-            {(currentView === "login" || currentView === "register" || currentView === "forgot-password") && (
+            {(currentView === "login" ||
+              currentView === "register" ||
+              currentView === "forgot-password") && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">Email Address</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">
+                  Email Address
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-sub/70" />
                   <input
@@ -171,7 +223,10 @@ export const AuthPages: React.FC = () => {
             {(currentView === "login" || currentView === "register") && (
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">Password</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">
+                    Password
+                  </label>
+
                   {currentView === "login" && (
                     <button
                       type="button"
@@ -182,6 +237,7 @@ export const AuthPages: React.FC = () => {
                     </button>
                   )}
                 </div>
+
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-sub/70" />
                   <input
@@ -197,27 +253,41 @@ export const AuthPages: React.FC = () => {
 
             {currentView === "otp" && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">Verification Code</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">
+                  Verification Code
+                </label>
                 <div className="relative">
                   <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-sub/70" />
                   <input
                     type="text"
                     maxLength={6}
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) =>
+                      setOtp(e.target.value.replace(/\D/g, ""))
+                    }
                     placeholder="123456"
                     className="w-full glass-input py-3 pl-11 pr-4 rounded-xl text-sm tracking-[0.5em] text-center font-mono font-bold"
                   />
                 </div>
+
                 <span className="text-[10px] text-text-sub text-right">
-                  Didn't receive code? <button type="button" onClick={() => showToast("Resent OTP code.", "info")} className="text-primary hover:underline">Resend OTP</button>
+                  Didn't receive code?{" "}
+                  <button
+                    type="button"
+                    onClick={() => showToast("Resent OTP code.", "info")}
+                    className="text-primary hover:underline"
+                  >
+                    Resend OTP
+                  </button>
                 </span>
               </div>
             )}
 
             {currentView === "reset-password" && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">New Password</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-text-sub">
+                  New Password
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-sub/70" />
                   <input
@@ -240,8 +310,14 @@ export const AuthPages: React.FC = () => {
                   className="mt-0.5 rounded border-glass accent-primary"
                 />
                 <span>
-                  I agree to the <a href="#terms" className="text-primary hover:underline">Terms of Service</a> and{" "}
-                  <a href="#privacy" className="text-primary hover:underline">Privacy Policy</a>
+                  I agree to the{" "}
+                  <a href="#terms" className="text-primary hover:underline">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="#privacy" className="text-primary hover:underline">
+                    Privacy Policy
+                  </a>
                 </span>
               </label>
             )}
@@ -252,7 +328,8 @@ export const AuthPages: React.FC = () => {
                   <Shield className="w-8 h-8 text-success" />
                 </div>
                 <p className="text-xs text-text-sub max-w-[280px]">
-                  Your email has been securely verified by the ToxicLens network keys.
+                  Your email has been securely verified by the ToxicLens
+                  network keys.
                 </p>
               </div>
             )}
@@ -261,12 +338,36 @@ export const AuthPages: React.FC = () => {
               type="submit"
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-sm font-semibold text-white hover:opacity-90 shadow-md shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
             >
-              {currentView === "login" && <>Log In <ArrowRight className="w-4 h-4" /></>}
-              {currentView === "register" && <>Register Account <ArrowRight className="w-4 h-4" /></>}
-              {currentView === "forgot-password" && <>Send OTP Code <ArrowRight className="w-4 h-4" /></>}
-              {currentView === "otp" && <>Verify Code <ArrowRight className="w-4 h-4" /></>}
-              {currentView === "email-verify" && <>Enter Dashboard <ArrowRight className="w-4 h-4" /></>}
-              {currentView === "reset-password" && <>Save Password <ArrowRight className="w-4 h-4" /></>}
+              {currentView === "login" && (
+                <>
+                  Log In <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+              {currentView === "register" && (
+                <>
+                  Register Account <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+              {currentView === "forgot-password" && (
+                <>
+                  Send OTP Code <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+              {currentView === "otp" && (
+                <>
+                  Verify Code <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+              {currentView === "email-verify" && (
+                <>
+                  Enter Dashboard <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+              {currentView === "reset-password" && (
+                <>
+                  Save Password <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 
@@ -275,16 +376,30 @@ export const AuthPages: React.FC = () => {
             {currentView === "login" && (
               <>
                 <span>New to ToxicLens?</span>
-                <button onClick={() => setView("register")} className="font-bold text-primary hover:underline">Create Account</button>
+                <button
+                  onClick={() => setView("register")}
+                  className="font-bold text-primary hover:underline"
+                >
+                  Create Account
+                </button>
               </>
             )}
+
             {currentView === "register" && (
               <>
                 <span>Already have account?</span>
-                <button onClick={() => setView("login")} className="font-bold text-primary hover:underline">Log In</button>
+                <button
+                  onClick={() => setView("login")}
+                  className="font-bold text-primary hover:underline"
+                >
+                  Log In
+                </button>
               </>
             )}
-            {(currentView === "forgot-password" || currentView === "otp" || currentView === "reset-password") && (
+
+            {(currentView === "forgot-password" ||
+              currentView === "otp" ||
+              currentView === "reset-password") && (
               <button
                 type="button"
                 onClick={() => setView("login")}
@@ -294,16 +409,6 @@ export const AuthPages: React.FC = () => {
               </button>
             )}
           </div>
-
-          {/* Demo Autocomplete Helper (Placement-ready design feature) */}
-          {(currentView === "login" || currentView === "register" || currentView === "otp") && (
-            <button
-              onClick={handleDemoFill}
-              className="mt-6 w-full text-center text-[10px] uppercase font-bold tracking-widest text-accent hover:text-accent/80 transition-colors"
-            >
-              ⚡ Fill Demo Data
-            </button>
-          )}
         </GlassCard>
       </div>
     </div>
