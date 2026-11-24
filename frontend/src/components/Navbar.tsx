@@ -28,27 +28,35 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
+  // Navigation Links
   const navLinks = [
     { label: "Home", id: "hero" },
     { label: "Features", id: "features" },
     { label: "How It Works", id: "how-it-works" },
+    { label: "Why Us", id: "why-us" },
     { label: "FAQ", id: "faq" },
     { label: "Contact", id: "contact" },
   ];
 
+  // Handle Navigation Link Click
   const handleLinkClick = (id: string) => {
     setIsMobileMenuOpen(false);
     onScrollToSection(id);
   };
 
+  // Handle Logo Click
   const handleLogoClick = () => {
     setIsMobileMenuOpen(false);
     setView("landing");
   };
 
+  // Handle Login and Register
   const handleAuthClick = (view: "login" | "register") => {
     setIsMobileMenuOpen(false);
     setView(view);
@@ -67,6 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
       `}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+
         {/* Logo */}
         <button
           onClick={handleLogoClick}
@@ -100,6 +109,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
+
+          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-xl border border-glass bg-surface-glass text-text-main hover:border-primary/40 hover:text-primary transition-all cursor-pointer"
@@ -113,6 +124,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
             )}
           </button>
 
+          {/* Login */}
           <button
             onClick={() => handleAuthClick("login")}
             className="px-5 py-2.5 text-sm font-semibold text-text-main hover:text-primary transition-colors cursor-pointer"
@@ -120,6 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
             Login
           </button>
 
+          {/* Get Started */}
           <button
             onClick={() => handleAuthClick("register")}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-sm font-semibold text-white hover:opacity-90 shadow-md shadow-primary/15 hover:shadow-primary/25 hover:scale-[1.02] transition-all cursor-pointer"
@@ -131,6 +144,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
 
         {/* Mobile Controls */}
         <div className="flex md:hidden items-center gap-3">
+
+          {/* Mobile Theme Toggle */}
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-xl border border-glass bg-surface-glass text-text-main hover:text-primary transition-colors cursor-pointer"
@@ -143,6 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
             )}
           </button>
 
+          {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="p-2.5 rounded-xl border border-glass bg-surface-glass text-text-main hover:text-primary transition-colors cursor-pointer"
@@ -161,7 +177,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed top-[69px] left-0 right-0 bottom-0 z-30 bg-slate-950/95 light:bg-white/95 backdrop-blur-lg border-t border-glass p-6 animate-[slideDown_0.2s_ease-out]">
+
           <div className="flex flex-col gap-5">
+
+            {/* Mobile Navigation Links */}
             {navLinks.map((link) => (
               <button
                 key={link.id}
@@ -172,7 +191,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
               </button>
             ))}
 
+            {/* Mobile Authentication Buttons */}
             <div className="flex flex-col gap-3 mt-5">
+
               <button
                 onClick={() => handleAuthClick("login")}
                 className="w-full py-3 rounded-xl border border-glass text-base font-semibold text-text-main hover:bg-surface-glass transition-colors"
@@ -187,6 +208,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollToSection }) => {
                 Get Started
                 <ArrowRight className="w-4 h-4" />
               </button>
+
             </div>
           </div>
         </div>

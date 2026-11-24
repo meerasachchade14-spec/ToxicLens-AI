@@ -14,7 +14,6 @@ import {
   Languages,
   Sparkles,
   Smile,
-  Clock,
   ChevronDown,
   Scan,
   HelpCircle,
@@ -24,72 +23,76 @@ import {
   Phone,
   MapPin,
   Code,
+  History,
+  LayoutDashboard,
+  Settings,
 } from "lucide-react";
 
 export const LandingPage: React.FC = () => {
   const { setView } = useApp();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
+  // ToxicLens AI Platform Features
   const features = [
     {
       title: "Cyberbullying Detection",
-      desc: "Identify potentially harmful online comments, bullying and abusive language.",
+      desc: "Analyze online text to identify potentially harmful, abusive and bullying-related expressions.",
       icon: <Shield className="w-6 h-6 text-primary" />,
     },
     {
-      title: "Hate Speech Detection",
-      desc: "Analyze text for hateful, offensive and harmful expressions.",
+      title: "Toxicity Analysis",
+      desc: "Examine text for toxic and offensive language to understand potentially harmful communication.",
+      icon: <Activity className="w-6 h-6 text-danger" />,
+    },
+    {
+      title: "Harmful Language Analysis",
+      desc: "Identify language patterns associated with hate speech, harassment and offensive expressions.",
       icon: <Zap className="w-6 h-6 text-secondary" />,
     },
     {
       title: "Emotion Analysis",
-      desc: "Explore emotional signals such as anger, sadness, fear and neutral sentiment.",
+      desc: "Explore emotional indicators such as anger, sadness, fear and neutral sentiment where supported by the analysis.",
       icon: <Smile className="w-6 h-6 text-accent" />,
     },
     {
-      title: "Toxicity Analysis",
-      desc: "Understand toxicity levels and confidence indicators in analyzed content.",
-      icon: <Activity className="w-6 h-6 text-danger" />,
-    },
-    {
-      title: "AI Safer Rewrite",
-      desc: "Explore more respectful alternatives to harmful or offensive wording.",
-      icon: <Sparkles className="w-6 h-6 text-success" />,
-    },
-    {
       title: "Screenshot Text Extraction",
-      desc: "Extract text from uploaded screenshots for content analysis.",
+      desc: "Extract text from uploaded conversation screenshots using OCR before content analysis.",
       icon: <Scan className="w-6 h-6 text-primary" />,
     },
     {
-      title: "Multilingual Analysis",
-      desc: "Designed with English, Hindi and Hinglish text analysis in mind.",
-      icon: <Languages className="w-6 h-6 text-secondary" />,
-    },
-    {
-      title: "Detection History",
-      desc: "Keep a record of previous analyses for later review.",
-      icon: <Clock className="w-6 h-6 text-accent" />,
-    },
-    {
-      title: "PDF Reports",
-      desc: "Present analysis information in a structured, downloadable report.",
-      icon: <FileText className="w-6 h-6 text-success" />,
-    },
-    {
-      title: "Secure User Access",
-      desc: "A user-focused account experience with privacy and access control in mind.",
-      icon: <Lock className="w-6 h-6 text-primary" />,
-    },
-    {
-      title: "AI-Based Insights",
-      desc: "Understand content through language analysis and meaningful indicators.",
+      title: "Analysis Insights",
+      desc: "Review analysis results and indicators to better understand potentially harmful content.",
       icon: <Brain className="w-6 h-6 text-accent" />,
     },
     {
-      title: "Admin Management",
-      desc: "An administrative interface for managing platform activity and users.",
-      icon: <Shield className="w-6 h-6 text-success" />,
+      title: "Detection History",
+      desc: "Access previously saved analysis records through the history section.",
+      icon: <History className="w-6 h-6 text-secondary" />,
+    },
+    {
+      title: "Analysis Reports",
+      desc: "View organized analysis information through the reports section.",
+      icon: <FileText className="w-6 h-6 text-success" />,
+    },
+    {
+      title: "User Dashboard",
+      desc: "Access detection tools, analysis history and other platform sections from one place.",
+      icon: <LayoutDashboard className="w-6 h-6 text-primary" />,
+    },
+    {
+      title: "User Profile & Settings",
+      desc: "Manage your profile and access available account preferences.",
+      icon: <Settings className="w-6 h-6 text-accent" />,
+    },
+    {
+      title: "Multilingual Awareness",
+      desc: "The project considers English, Hindi and Hinglish communication patterns.",
+      icon: <Languages className="w-6 h-6 text-secondary" />,
+    },
+    {
+      title: "Admin Dashboard",
+      desc: "Provides an administrative interface for viewing and managing platform activity.",
+      icon: <Lock className="w-6 h-6 text-success" />,
     },
   ];
 
@@ -126,35 +129,36 @@ export const LandingPage: React.FC = () => {
     },
   ];
 
+  // Why Us Benefits
   const benefits = [
     {
-      title: "Safer Digital Spaces",
+      title: "Promoting Cyber Safety",
       desc: "Encourages awareness of cyberbullying and harmful online communication.",
       icon: <Shield className="w-6 h-6 text-primary" />,
     },
     {
-      title: "AI-Powered Analysis",
-      desc: "Uses language analysis concepts to identify potentially toxic expressions.",
+      title: "Language-Based Analysis",
+      desc: "Examines text patterns to identify potentially toxic and harmful expressions.",
       icon: <Brain className="w-6 h-6 text-secondary" />,
     },
     {
-      title: "Clear Insights",
-      desc: "Presents analysis information in a simple and understandable format.",
+      title: "Understandable Results",
+      desc: "Presents analysis information through organized results and visual indicators.",
       icon: <BarChart3 className="w-6 h-6 text-accent" />,
     },
     {
-      title: "Multiple Input Types",
-      desc: "Designed to work with both directly entered text and screenshot content.",
+      title: "Text and Screenshot Input",
+      desc: "Supports direct text input and screenshot-based text extraction for analysis.",
       icon: <Scan className="w-6 h-6 text-success" />,
     },
     {
       title: "Language Awareness",
-      desc: "Considers English, Hindi and Hinglish communication patterns.",
+      desc: "Considers English, Hindi and Hinglish as part of the project's language scope.",
       icon: <Languages className="w-6 h-6 text-primary" />,
     },
     {
-      title: "User-Friendly Experience",
-      desc: "Combines a clean interface with organized analysis and navigation.",
+      title: "Organized User Experience",
+      desc: "Brings detection, history, reports and account sections together in one platform.",
       icon: <Sparkles className="w-6 h-6 text-secondary" />,
     },
   ];
@@ -162,23 +166,27 @@ export const LandingPage: React.FC = () => {
   const faqs = [
     {
       q: "What is ToxicLens AI?",
-      a: "ToxicLens AI is an AI-based cyberbullying detection project designed to analyze online text and identify potentially harmful communication, including bullying, hate speech and offensive language.",
+      a: "ToxicLens AI is an AI-based cyberbullying detection project designed to analyze text and identify potentially harmful online communication, including bullying, toxic language, hate speech and offensive expressions.",
     },
     {
       q: "What types of content can be analyzed?",
-      a: "The platform is designed for text comments and screenshots containing conversations. Screenshot content can be processed through text extraction before analysis.",
+      a: "Users can provide text directly or upload screenshots containing conversations. Screenshot text can be extracted using OCR and then used for content analysis.",
+    },
+    {
+      q: "What does the analysis identify?",
+      a: "The platform focuses on cyberbullying and potentially harmful language. Depending on the implemented analysis modules, results can include toxicity indicators, harmful language patterns and emotional insights.",
     },
     {
       q: "Does ToxicLens AI support Hindi and Hinglish?",
-      a: "Multilingual analysis is part of the project scope, with a focus on English, Hindi and Hinglish text. Actual detection quality depends on the implemented models and their evaluation.",
+      a: "English, Hindi and Hinglish are considered within the project's multilingual scope. Detection quality may vary depending on the language, wording and implemented models.",
     },
     {
       q: "Are AI detection results always accurate?",
-      a: "No AI prediction should be treated as a perfect judgment. Language can depend on context, sarcasm and intent, so results should be reviewed carefully by a human.",
+      a: "No. AI predictions are not perfect judgments. Context, sarcasm, spelling variations and intent can affect results, so users should review the analysis carefully.",
     },
     {
       q: "Can I review previous analysis results?",
-      a: "The platform is designed to include a history area where users can review previous analysis records and access related reports.",
+      a: "The platform includes a history section for reviewing saved analysis records and a reports section for viewing organized analysis information.",
     },
     {
       q: "Who developed ToxicLens AI?",
@@ -225,9 +233,9 @@ export const LandingPage: React.FC = () => {
           </h1>
 
           <p className="text-lg text-text-sub max-w-xl leading-relaxed">
-            Detect potentially harmful online content with ToxicLens AI.
-            Explore cyberbullying, hate speech, harassment and offensive
-            language analysis to encourage safer digital communication.
+            Analyze online text and identify potentially harmful communication
+            with ToxicLens AI. Explore cyberbullying, toxic language and
+            offensive content analysis to promote safer digital interactions.
           </p>
 
           {/* Authentication Buttons */}
@@ -384,14 +392,14 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Platform Focus Section - No Fake Statistics */}
+      {/* Platform Focus Section */}
       <section className="max-w-7xl mx-auto px-6 py-8 border-y border-glass bg-slate-900/40 light:bg-slate-50/40 backdrop-blur-sm">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { title: "Cyber Safety", desc: "Promoting safer interactions" },
-            { title: "AI Analysis", desc: "Understanding harmful content" },
-            { title: "Text & Images", desc: "Multiple input formats" },
-            { title: "Multilingual", desc: "English, Hindi & Hinglish" },
+            { title: "Text Analysis", desc: "Understanding harmful language" },
+            { title: "Text & Images", desc: "Text input and screenshot OCR" },
+            { title: "Language Scope", desc: "English, Hindi & Hinglish" },
           ].map((item) => (
             <div key={item.title} className="flex flex-col gap-2">
               <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -420,8 +428,8 @@ export const LandingPage: React.FC = () => {
           </h2>
 
           <p className="text-base md:text-lg text-text-sub max-w-2xl leading-relaxed">
-            Discover the key capabilities designed to support cyberbullying
-            detection, content analysis and safer digital communication.
+            Explore the platform's key modules for cyberbullying detection,
+            screenshot text extraction, analysis review and user management.
           </p>
         </div>
 
@@ -449,7 +457,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works Section - Preserved */}
       <section
         id="how-it-works"
         className="max-w-7xl mx-auto px-6 py-24 text-center"
@@ -502,14 +510,14 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Why Choose ToxicLens AI */}
+      {/* Why Us Section */}
       <section
-        id="why-choose"
-        className="max-w-7xl mx-auto px-6 py-24 text-center"
+        id="why-us"
+        className="max-w-7xl mx-auto px-6 py-24 text-center scroll-mt-24"
       >
         <div className="flex flex-col items-center gap-4 mb-16">
           <span className="text-sm font-bold uppercase tracking-widest text-accent">
-            Why ToxicLens AI
+            Why Us
           </span>
 
           <h2 className="text-3xl md:text-4xl font-extrabold text-text-main">
@@ -561,8 +569,8 @@ export const LandingPage: React.FC = () => {
           </h2>
 
           <p className="text-base text-text-sub max-w-xl">
-            Find answers to common questions about ToxicLens AI and its
-            cyberbullying detection approach.
+            Find answers to common questions about ToxicLens AI, its analysis
+            modules and cyberbullying detection approach.
           </p>
         </div>
 
@@ -608,7 +616,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* Contact Section - Preserved */}
       <section
         id="contact"
         className="max-w-7xl mx-auto px-6 py-24"
@@ -658,7 +666,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Phone */}
+              {/* Phone - Non-clickable */}
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 shrink-0 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                   <Phone className="w-5 h-5 text-primary" />
