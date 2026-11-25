@@ -1,0 +1,13 @@
+DJANGO_SECRET_KEY=replace_with_a_random_secret
+DEBUG=True
+
+MONGO_URI=mongodb://localhost:27017
+MONGO_DATABASE=toxiclens_ai
+
+ADMIN_EMAIL=your_admin_email@gmail.com
+
+EMAIL_HOST_USER=your_admin_email@gmail.com
+EMAIL_HOST_PASSWORD=your_16_digit_gmail_app_password
+DEFAULT_FROM_EMAIL=ToxicLens AI <your_admin_email@gmail.com>
+
+JWT_SECRET=replace_with_a_long_random_secret
