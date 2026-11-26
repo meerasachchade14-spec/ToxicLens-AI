@@ -2,33 +2,51 @@
 import re
 
 
-def validate_email(email):
-    email = email.strip().lower()
+def normalize_email(email):
+    return email.strip().lower()
 
+
+def is_valid_email(email):
     pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-
-    if not email:
-        return False
-
     return bool(re.match(pattern, email))
 
 
 def validate_password(password):
-    return isinstance(password, str) and len(password) >= 6
+    if len(password) < 6:
+        return False, "Password must be at least 6 characters"
+
+    return True, ""
 
 
-def validate_required_fields(data, fields):
-    for field in fields:
-        value = data.get(field)
+def validate_register_fields(data):
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
+    agree_terms = data.get("agreeTerms", False)
 
-        if value is None:
-            return False
+    if not name or not email or not password:
+        return False, "Please fill out all fields"
 
-        if isinstance(value, str) and not value.strip():
-            return False
+    if not isinstance(agree_terms, bool) or not agree_terms:
+        return False, "Please fill out all fields"
 
-    return True
+    if not is_valid_email(email):
+        return False, "Please enter a valid email address"
+
+    if len(password) < 6:
+        return False, "Password must be at least 6 characters"
+
+    return True, ""
 
 
-def validate_terms(value):
-    return value is True or value == "true" or value == 1
+def validate_login_fields(data):
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
+
+    if not email or not password:
+        return False, "Please fill out all fields"
+
+    if not is_valid_email(email):
+        return False, "Please enter a valid email address"
+
+    return True, ""

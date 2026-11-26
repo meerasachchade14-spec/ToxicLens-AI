@@ -2,491 +2,450 @@
 import json
 from datetime import datetime, timezone
 
+from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
 
-from authentication.mongo import (
-    users_collection,
-    pending_registrations_collection,
-    password_reset_collection,
+from pymongo.errors import DuplicateKeyError
+
+from .mongo import (
+    get_users,
+    get_pending_registrations,
+    get_password_resets,
 )
-
-from authentication.validators import (
-    validate_email,
-    validate_password,
-    validate_required_fields,
-    validate_terms,
+from .validators import (
+    normalize_email,
+    validate_register_fields,
+    validate_login_fields,
+    is_valid_email,
 )
-
-from authentication.email_service import send_otp_email
-
-from authentication.utils import (
+from .email_service import send_otp_email
+from .utils import (
     generate_otp,
     hash_otp,
-    verify_otp,
-    get_otp_expiry,
-    create_access_token,
-    create_user_password_hash,
-    verify_user_password,
+    check_otp,
+    otp_expiry,
+    is_expired,
+    hash_password,
+    verify_password,
+    create_jwt,
 )
 
 
-def get_json_data(request):
-    try:
-        return json.loads(request.body or "{}")
-    except json.JSONDecodeError:
-        return None
-
-
-def error_response(message, status=400):
+def response(message, status=200, **extra):
     return JsonResponse(
-        {
-            "success": False,
-            "message": message,
-        },
+        {"message": message, **extra},
         status=status,
     )
 
 
-def success_response(message, extra=None):
-    response_data = {
-        "success": True,
-        "message": message,
-    }
-
-    if extra:
-        response_data.update(extra)
-
-    return JsonResponse(response_data)
+def get_request_data(request):
+    try:
+        return json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
 
 
-def is_expired(expiry):
-    if not expiry:
-        return True
-
-    # MongoDB may return a naive UTC datetime.
-    if expiry.tzinfo is None:
-        expiry = expiry.replace(tzinfo=timezone.utc)
-
-    return datetime.now(timezone.utc) > expiry
+def require_post(request):
+    if request.method != "POST":
+        return response("Method not allowed", 405)
+    return None
 
 
-# =========================================================
+# --------------------------------------------------
 # REGISTER
-# POST /api/auth/register/
-# =========================================================
+# --------------------------------------------------
 
 @csrf_exempt
 def register(request):
-    if request.method != "POST":
-        return error_response("Method not allowed.", 405)
+    method_error = require_post(request)
+    if method_error:
+        return method_error
 
-    data = get_json_data(request)
-
+    data = get_request_data(request)
     if data is None:
-        return error_response("Invalid request data.")
+        return response("Invalid request data", 400)
 
-    required_fields = ["name", "email", "password", "agreeTerms"]
-
-    if not validate_required_fields(data, required_fields):
-        return error_response("Please fill out all fields.")
+    valid, error = validate_register_fields(data)
+    if not valid:
+        return response(error, 400)
 
     name = data["name"].strip()
-    email = data["email"].strip().lower()
+    email = normalize_email(data["email"])
     password = data["password"]
-    agree_terms = data["agreeTerms"]
 
-    if not name:
-        return error_response("Please enter your name.")
-
-    if not validate_email(email):
-        return error_response("Please enter a valid email address.")
-
-    if not validate_password(password):
-        return error_response(
-            "Password must be at least 6 characters long."
-        )
-
-    if not validate_terms(agree_terms):
-        return error_response(
-            "You must agree to the Terms and Conditions."
-        )
-
-    # Admin email is reserved and cannot be registered as a user.
+    # Admin email is reserved.
     if email == settings.ADMIN_EMAIL:
-        return error_response(
-            "This email is reserved for the administrator."
+        return response(
+            "This email is reserved for admin",
+            403,
         )
 
-    # Check if this email already has an account.
-    existing_user = users_collection.find_one({"email": email})
+    users = get_users()
 
-    if existing_user:
-        return error_response(
-            "This email is already registered."
+    # Prevent duplicate registration, regardless of name/password.
+    if users.find_one({"email": email}):
+        return response(
+            "This email is already registered",
+            409,
         )
 
-    # Generate registration OTP.
     otp = generate_otp()
 
-    pending_data = {
+    pending = {
         "name": name,
         "email": email,
-        "password": create_user_password_hash(password),
+        "password_hash": hash_password(password),
         "otp_hash": hash_otp(otp),
-        "otp_expiry": get_otp_expiry(),
+        "expires_at": otp_expiry(),
+        "attempts": 0,
         "created_at": datetime.now(timezone.utc),
     }
 
-    # Replace an older uncompleted registration for the same email.
-    pending_registrations_collection.update_one(
+    get_pending_registrations().replace_one(
         {"email": email},
-        {"$set": pending_data},
+        pending,
         upsert=True,
     )
 
-    email_sent = send_otp_email(
-        email,
-        otp,
-        "register",
-    )
+    try:
+        send_otp_email(email, otp, "registration")
 
-    if not email_sent:
-        pending_registrations_collection.delete_one(
+    except Exception as exc:
+        get_pending_registrations().delete_one(
             {"email": email}
         )
 
-        return error_response(
-            "Unable to send OTP email. Please try again later.",
+        print("Registration email error:", str(exc))
+
+        return response(
+            "Unable to send OTP email. Please try again.",
             500,
         )
 
-    return success_response(
-        "Registration OTP sent successfully. Please check your email."
+    return response(
+        "Registration OTP sent successfully",
+        200,
+        email=email,
     )
 
 
-# =========================================================
+# --------------------------------------------------
 # VERIFY REGISTRATION OTP
-# POST /api/auth/verify-register-otp/
-# =========================================================
+# --------------------------------------------------
 
 @csrf_exempt
 def verify_register_otp(request):
-    if request.method != "POST":
-        return error_response("Method not allowed.", 405)
+    method_error = require_post(request)
+    if method_error:
+        return method_error
 
-    data = get_json_data(request)
-
+    data = get_request_data(request)
     if data is None:
-        return error_response("Invalid request data.")
+        return response("Invalid request data", 400)
 
-    if not validate_required_fields(data, ["email", "otp"]):
-        return error_response("Please enter email and OTP.")
+    email = normalize_email(data.get("email", ""))
+    otp = data.get("otp", "").strip()
 
-    email = data["email"].strip().lower()
-    otp = str(data["otp"]).strip()
+    if not email or not otp:
+        return response("Please fill out all fields", 400)
 
     if len(otp) != 6 or not otp.isdigit():
-        return error_response("Enter a valid 6-digit OTP.")
+        return response("OTP must be 6 digits", 400)
 
-    pending = pending_registrations_collection.find_one(
+    pending_collection = get_pending_registrations()
+    pending = pending_collection.find_one(
         {"email": email}
     )
 
     if not pending:
-        return error_response(
-            "Registration not found. Please register again."
+        return response(
+            "Registration not found. Please register again.",
+            404,
         )
 
-    if is_expired(pending.get("otp_expiry")):
-        pending_registrations_collection.delete_one(
-            {"email": email}
+    if is_expired(pending.get("expires_at")):
+        pending_collection.delete_one({"email": email})
+        return response("OTP expired. Please register again.", 400)
+
+    if pending.get("attempts", 0) >= settings.OTP_MAX_ATTEMPTS:
+        pending_collection.delete_one({"email": email})
+        return response(
+            "Too many incorrect attempts. Please register again.",
+            429,
         )
 
-        return error_response(
-            "OTP expired. Please register again."
+    if not check_otp(otp, pending["otp_hash"]):
+        pending_collection.update_one(
+            {"email": email},
+            {"$inc": {"attempts": 1}},
         )
+        return response("Incorrect OTP", 400)
 
-    if not verify_otp(otp, pending["otp_hash"]):
-        return error_response("Incorrect OTP. Please try again.")
+    users = get_users()
 
-    # Double-check duplicate account before creating user.
-    if users_collection.find_one({"email": email}):
-        pending_registrations_collection.delete_one(
-            {"email": email}
-        )
-
-        return error_response(
-            "This email is already registered."
-        )
-
-    user_data = {
+    user = {
         "name": pending["name"],
-        "email": pending["email"],
-        "password": pending["password"],
-        "role": "User",
-        "is_verified": True,
+        "email": email,
+        "password_hash": pending["password_hash"],
+        "role": "user",
+        "verified": True,
         "created_at": datetime.now(timezone.utc),
     }
 
-    users_collection.insert_one(user_data)
+    try:
+        users.insert_one(user)
 
-    pending_registrations_collection.delete_one(
-        {"email": email}
+    except DuplicateKeyError:
+        pending_collection.delete_one({"email": email})
+        return response(
+            "This email is already registered",
+            409,
+        )
+
+    pending_collection.delete_one({"email": email})
+
+    return response(
+        "Email verified and registration successful",
+        201,
     )
 
-    return success_response(
-        "Email verified successfully. Your account has been created."
-    )
 
-
-# =========================================================
+# --------------------------------------------------
 # LOGIN
-# POST /api/auth/login/
-# =========================================================
+# --------------------------------------------------
 
 @csrf_exempt
 def login(request):
-    if request.method != "POST":
-        return error_response("Method not allowed.", 405)
+    method_error = require_post(request)
+    if method_error:
+        return method_error
 
-    data = get_json_data(request)
-
+    data = get_request_data(request)
     if data is None:
-        return error_response("Invalid request data.")
+        return response("Invalid request data", 400)
 
-    if not validate_required_fields(data, ["email", "password"]):
-        return error_response("Please fill out all fields.")
+    valid, error = validate_login_fields(data)
+    if not valid:
+        return response(error, 400)
 
-    email = data["email"].strip().lower()
+    email = normalize_email(data["email"])
     password = data["password"]
 
-    if not validate_email(email):
-        return error_response("Please enter a valid email address.")
-
-    user = users_collection.find_one({"email": email})
+    user = get_users().find_one({"email": email})
 
     if not user:
-        return error_response(
-            "This email is not registered. Please create an account."
+        return response(
+            "Account not found. Please register.",
+            404,
         )
 
-    if not verify_user_password(
+    if not user.get("verified", False):
+        return response(
+            "Please verify your email before logging in",
+            403,
+        )
+
+    if not verify_password(
         password,
-        user["password"]
+        user.get("password_hash", ""),
     ):
-        return error_response("Incorrect password.")
+        return response("Incorrect password", 401)
 
-    if not user.get("is_verified", False):
-        return error_response(
-            "Please verify your email before logging in."
-        )
+    token = create_jwt(user)
 
-    token = create_access_token(user)
-
-    return success_response(
-        "Login successful.",
-        {
-            "token": token,
-            "user": {
-                "id": str(user["_id"]),
-                "name": user["name"],
-                "email": user["email"],
-                "role": user.get("role", "User"),
-            },
+    return response(
+        "Login successful",
+        200,
+        token=token,
+        user={
+            "id": str(user["_id"]),
+            "name": user["name"],
+            "email": user["email"],
+            "role": user.get("role", "user"),
         },
     )
 
 
-# =========================================================
-# FORGOT PASSWORD
-# POST /api/auth/forgot-password/
-# =========================================================
+# --------------------------------------------------
+# FORGOT PASSWORD - SEND OTP
+# --------------------------------------------------
 
 @csrf_exempt
 def forgot_password(request):
-    if request.method != "POST":
-        return error_response("Method not allowed.", 405)
+    method_error = require_post(request)
+    if method_error:
+        return method_error
 
-    data = get_json_data(request)
-
+    data = get_request_data(request)
     if data is None:
-        return error_response("Invalid request data.")
+        return response("Invalid request data", 400)
 
-    if not validate_required_fields(data, ["email"]):
-        return error_response("Please enter your email address.")
+    email = normalize_email(data.get("email", ""))
 
-    email = data["email"].strip().lower()
+    if not email:
+        return response("Please enter your email", 400)
 
-    if not validate_email(email):
-        return error_response("Please enter a valid email address.")
+    if not is_valid_email(email):
+        return response("Please enter a valid email address", 400)
 
-    user = users_collection.find_one({"email": email})
+    user = get_users().find_one({"email": email})
 
     if not user:
-        return error_response(
-            "No account exists with this email address."
-        )
+        return response("Account not found", 404)
 
     otp = generate_otp()
 
-    reset_data = {
+    reset_record = {
         "email": email,
         "otp_hash": hash_otp(otp),
-        "otp_expiry": get_otp_expiry(),
+        "expires_at": otp_expiry(),
+        "attempts": 0,
         "verified": False,
         "created_at": datetime.now(timezone.utc),
     }
 
-    password_reset_collection.update_one(
+    get_password_resets().replace_one(
         {"email": email},
-        {"$set": reset_data},
+        reset_record,
         upsert=True,
     )
 
-    email_sent = send_otp_email(
-        email,
-        otp,
-        "forgot-password",
-    )
+    try:
+        send_otp_email(email, otp, "password_reset")
 
-    if not email_sent:
-        password_reset_collection.delete_one(
+    except Exception as exc:
+        get_password_resets().delete_one(
             {"email": email}
         )
 
-        return error_response(
-            "Unable to send OTP email. Please try again later.",
+        print("Password reset email error:", str(exc))
+
+        return response(
+            "Unable to send OTP email. Please try again.",
             500,
         )
 
-    return success_response(
-        "Password reset OTP sent to your registered email."
+    return response(
+        "Password reset OTP sent successfully",
+        200,
+        email=email,
     )
 
 
-# =========================================================
-# VERIFY PASSWORD RESET OTP
-# POST /api/auth/verify-reset-otp/
-# =========================================================
+# --------------------------------------------------
+# VERIFY FORGOT PASSWORD OTP
+# --------------------------------------------------
 
 @csrf_exempt
 def verify_reset_otp(request):
-    if request.method != "POST":
-        return error_response("Method not allowed.", 405)
+    method_error = require_post(request)
+    if method_error:
+        return method_error
 
-    data = get_json_data(request)
-
+    data = get_request_data(request)
     if data is None:
-        return error_response("Invalid request data.")
+        return response("Invalid request data", 400)
 
-    if not validate_required_fields(data, ["email", "otp"]):
-        return error_response("Please enter email and OTP.")
+    email = normalize_email(data.get("email", ""))
+    otp = data.get("otp", "").strip()
 
-    email = data["email"].strip().lower()
-    otp = str(data["otp"]).strip()
+    if not email or not otp:
+        return response("Please fill out all fields", 400)
 
     if len(otp) != 6 or not otp.isdigit():
-        return error_response("Enter a valid 6-digit OTP.")
+        return response("OTP must be 6 digits", 400)
 
-    reset_record = password_reset_collection.find_one(
-        {"email": email}
-    )
+    resets = get_password_resets()
+    reset = resets.find_one({"email": email})
 
-    if not reset_record:
-        return error_response(
-            "Password reset request not found. Please request a new OTP."
+    if not reset:
+        return response(
+            "Reset request not found. Please request OTP again.",
+            404,
         )
 
-    if is_expired(reset_record.get("otp_expiry")):
-        password_reset_collection.delete_one(
-            {"email": email}
+    if is_expired(reset.get("expires_at")):
+        resets.delete_one({"email": email})
+        return response("OTP expired. Please request a new OTP.", 400)
+
+    if reset.get("attempts", 0) >= settings.OTP_MAX_ATTEMPTS:
+        resets.delete_one({"email": email})
+        return response(
+            "Too many incorrect attempts. Please request a new OTP.",
+            429,
         )
 
-        return error_response(
-            "OTP expired. Please request a new OTP."
+    if not check_otp(otp, reset["otp_hash"]):
+        resets.update_one(
+            {"email": email},
+            {"$inc": {"attempts": 1}},
         )
+        return response("Incorrect OTP", 400)
 
-    if not verify_otp(otp, reset_record["otp_hash"]):
-        return error_response("Incorrect OTP. Please try again.")
-
-    password_reset_collection.update_one(
+    resets.update_one(
         {"email": email},
-        {"$set": {"verified": True}}
+        {"$set": {"verified": True}},
     )
 
-    return success_response(
-        "OTP verified successfully. You can now reset your password."
-    )
+    return response("OTP verified successfully")
 
 
-# =========================================================
+# --------------------------------------------------
 # RESET PASSWORD
-# POST /api/auth/reset-password/
-# =========================================================
+# --------------------------------------------------
 
 @csrf_exempt
 def reset_password(request):
-    if request.method != "POST":
-        return error_response("Method not allowed.", 405)
+    method_error = require_post(request)
+    if method_error:
+        return method_error
 
-    data = get_json_data(request)
-
+    data = get_request_data(request)
     if data is None:
-        return error_response("Invalid request data.")
+        return response("Invalid request data", 400)
 
-    if not validate_required_fields(
-        data,
-        ["email", "new_password"]
-    ):
-        return error_response("Please fill out all fields.")
+    email = normalize_email(data.get("email", ""))
+    password = data.get("password", "")
+    confirm_password = data.get("confirmPassword", "")
 
-    email = data["email"].strip().lower()
-    new_password = data["new_password"]
+    if not email or not password or not confirm_password:
+        return response("Please fill out all fields", 400)
 
-    if not validate_password(new_password):
-        return error_response(
-            "Password must be at least 6 characters long."
+    if len(password) < 6:
+        return response(
+            "Password must be at least 6 characters",
+            400,
         )
 
-    reset_record = password_reset_collection.find_one(
-        {"email": email}
-    )
+    if password != confirm_password:
+        return response("Passwords do not match", 400)
 
-    if not reset_record:
-        return error_response(
-            "Please verify your OTP before resetting the password."
+    resets = get_password_resets()
+    reset = resets.find_one({"email": email})
+
+    if not reset or not reset.get("verified"):
+        return response(
+            "Please verify your OTP first",
+            403,
         )
 
-    if not reset_record.get("verified"):
-        return error_response(
-            "Please verify your OTP before resetting the password."
+    if is_expired(reset.get("expires_at")):
+        resets.delete_one({"email": email})
+        return response(
+            "OTP expired. Please request a new OTP.",
+            400,
         )
 
-    if is_expired(reset_record.get("otp_expiry")):
-        password_reset_collection.delete_one(
-            {"email": email}
-        )
-
-        return error_response(
-            "OTP expired. Please request a new OTP."
-        )
-
-    users_collection.update_one(
+    result = get_users().update_one(
         {"email": email},
-        {
-            "$set": {
-                "password": create_user_password_hash(new_password)
-            }
-        },
+        {"$set": {"password_hash": hash_password(password)}},
     )
 
-    password_reset_collection.delete_one(
-        {"email": email}
-    )
+    if result.matched_count == 0:
+        resets.delete_one({"email": email})
+        return response("Account not found", 404)
 
-    return success_response(
-        "Password changed successfully. Please login with your new password."
-    )
+    resets.delete_one({"email": email})
+
+    return response("Password reset successful")

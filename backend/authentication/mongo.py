@@ -1,29 +1,59 @@
 
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 from django.conf import settings
 
-client = MongoClient(
-    settings.MONGO_URI,
-    serverSelectionTimeoutMS=5000
-)
+_client = None
+_db = None
 
-db = client[settings.MONGO_DATABASE]
 
-users_collection = db["users"]
-pending_registrations_collection = db["pending_registrations"]
-password_reset_collection = db["password_resets"]
+def get_db():
+    global _client, _db
 
-# Prevent duplicate registered accounts.
-users_collection.create_index("email", unique=True)
+    if _db is None:
+        _client = MongoClient(
+            settings.MONGO_URI,
+            serverSelectionTimeoutMS=5000,
+        )
 
-# One pending registration per email.
-pending_registrations_collection.create_index(
-    "email",
-    unique=True
-)
+        # Verify that MongoDB is reachable.
+        _client.admin.command("ping")
 
-# One reset record per email.
-password_reset_collection.create_index(
-    "email",
-    unique=True
-)
+        _db = _client[settings.MONGO_DATABASE]
+
+        # One account per email.
+        _db.users.create_index("email", unique=True)
+
+        # One active registration OTP record per email.
+        _db.pending_registrations.create_index(
+            "email", unique=True
+        )
+
+        # One active password reset record per email.
+        _db.password_resets.create_index(
+            "email", unique=True
+        )
+
+    return _db
+
+
+def get_users():
+    return get_db()["users"]
+
+
+def get_pending_registrations():
+    return get_db()["pending_registrations"]
+
+
+def get_password_resets():
+    return get_db()["password_resets"]
+
+
+def close_connection():
+    global _client, _db
+
+    if _client is not None:
+        _client.close()
+
+    _client = None
+    _db = None
