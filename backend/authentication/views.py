@@ -284,7 +284,7 @@ def forgot_password(request):
     email = normalize_email(data.get("email", ""))
 
     if not email:
-        return response("Please enter your email", 400)
+        return response("Please fill out all fields", 400)
 
     if not is_valid_email(email):
         return response("Please enter a valid email address", 400)
